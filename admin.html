@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理画面｜井口ヤング</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="news-list.js"></script>
+  <style>
+    body { font-family:'Noto Sans JP',sans-serif; background:#f3f4f6; }
+
+    /* ── スクリーン切り替え ── */
+    .screen { display:none; }
+    .screen.active { display:flex; }
+
+    /* ── 入力 ── */
+    .f-input {
+      width:100%; border:2px solid #e5e7eb; border-radius:10px;
+      padding:11px 14px; font-size:15px; font-family:inherit;
+      transition:border-color .2s; outline:none; background:#fff;
+    }
+    .f-input:focus { border-color:#C8102E; box-shadow:0 0 0 3px rgba(200,16,46,.1); }
+    textarea.f-input { resize:vertical; min-height:260px; line-height:1.8; }
+
+    /* ── ボタン ── */
+    .btn-red {
+      background:#C8102E; color:#fff; font-weight:900;
+      padding:13px 28px; border-radius:12px; border:none;
+      cursor:pointer; font-family:inherit; font-size:1rem;
+      transition:background .2s, transform .15s;
+      box-shadow:0 4px 16px rgba(200,16,46,.3);
+    }
+    .btn-red:hover   { background:#8B0000; transform:translateY(-1px); }
+    .btn-red:disabled{ background:#9ca3af; cursor:not-allowed; transform:none; box-shadow:none; }
+    .btn-gray {
+      background:#e5e7eb; color:#374151; font-weight:700;
+      padding:13px 28px; border-radius:12px; border:none;
+      cursor:pointer; font-family:inherit; font-size:.9rem;
+      transition:background .2s;
+    }
+    .btn-gray:hover { background:#d1d5db; }
+
+    /* ── プレビュー ── */
+    .preview-body h2 {
+      font-weight:900; font-size:1.05rem; color:#111; margin:1.4rem 0 .5rem;
+      padding-left:10px; border-left:4px solid #C8102E;
+    }
+    .preview-body p  { margin-bottom:.9rem; line-height:1.85; color:#374151; font-size:.9rem; }
+    .preview-body .box-red   { background:#fef2f2; border-left:4px solid #C8102E; border-radius:0 10px 10px 0; padding:10px 14px; margin:.8rem 0; }
+    .preview-body .box-green { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; margin:.8rem 0; font-size:.85rem; color:#166534; }
+    .preview-body .box-blue  { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 14px; margin:.8rem 0; font-size:.85rem; color:#1e40af; }
+    .preview-body .box-gold  { background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 14px; margin:.8rem 0; }
+
+    /* ── カテゴリ ── */
+    .cat-btn { transition:all .2s; }
+    .cat-btn.active { background:#C8102E !important; color:#fff !important; border-color:#C8102E !important; }
+
+    /* ── タブ ── */
+    .tab-btn { transition:border-color .2s, color .2s; }
+    .tab-btn.active { border-bottom:3px solid #C8102E; color:#C8102E; font-weight:700; }
+
+    /* ── 既存記事 ── */
+    .badge-game     { background:#C8102E; color:#fff; }
+    .badge-practice { background:#2563eb; color:#fff; }
+    .badge-event    { background:#059669; color:#fff; }
+    .badge-notice   { background:#7c3aed; color:#fff; }
+
+    /* ── トースト ── */
+    #toast {
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px);
+      z-index:9999; padding:14px 28px; border-radius:14px; font-weight:700;
+      font-size:.95rem; white-space:nowrap; transition:transform .35s, opacity .35s;
+      opacity:0; pointer-events:none;
+    }
+    #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+    #toast.success { background:#06C755; color:#fff; }
+    #toast.error   { background:#C8102E; color:#fff; }
+
+    /* ── ロック表示 ── */
+    .shake { animation:shake .4s; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}   60%{transform:translateX(-5px)}
+      80%{transform:translateX(5px)}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     トースト通知
+══════════════════════════════════════════════ -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1: 初回セットアップ
+     （パスワード と GitHub Token を登録）
+══════════════════════════════════════════════ -->
+<div id="screen-setup" class="screen active min-h-screen items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 rounded-2xl bg-red-600 flex items-center justify-center mx-auto mb-4 text-white font-black text-2xl">IY</div>
+      <h1 class="text-2xl font-black text-gray-900">初回セットアップ</h1>
+      <p class="text-gray-500 text-sm mt-2">このデバイスで初めて管理画面を使う際に一度だけ行います</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-6">
+
+      <!-- パスワード設定 -->
+      <div>
+        <label class="block text-sm font-bold text-gray-900 mb-2">
+          🔑 管理パスワードを設定
+        </label>
+        <input type="password" id="setup-pw" class="f-input" placeholder="パスワードを入力（8文字以上推奨）" autocomplete="new-password">
+        <p class="text-xs text-gray-400 mt-1.5">このデバイスのみに保存されます。他のデバイスでは再設定が必要です。</p>
+      </div>
+
+      <!-- GitHub Token -->
+      <div>
+        <label class="block text-sm font-bold text-gray-900 mb-2">
+          🔧 GitHub Personal Access Token
+        </label>
+        <input type="password" id="setup-token" class="f-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-3 text-xs text-blue-900 leading-relaxed">
+          <strong>📌 Token の取得方法：</strong><br>
+          1. <a href="https://github.com/settings/tokens?type=beta" target="_blank" class="underline font-bold">GitHub → Settings → Fine-grained tokens</a> を開く<br>
+          2.「Generate new token」をクリック<br>
+          3. Repository access：<strong>iguchi-young2 のみ</strong>を選択<br>
+          4. Permissions → Contents：<strong>Read and write</strong><br>
+          5. 生成されたトークンをここに貼り付ける
+        </div>
+      </div>
+
+      <button class="btn-red w-full" onclick="doSetup()">セットアップ完了 →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2: ログイン
+══════════════════════════════════════════════ -->
+<div id="screen-login" class="screen min-h-screen items-center justify-center px-4">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 rounded-2xl bg-red-600 flex items-center justify-center mx-auto mb-4 text-white font-black text-2xl">IY</div>
+      <h1 class="text-2xl font-black text-gray-900">管理画面</h1>
+      <p class="text-gray-400 text-sm mt-1">井口ヤング 活動報告 投稿システム</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <label class="block text-sm font-bold text-gray-900 mb-2">パスワード</label>
+      <input type="password" id="login-pw" class="f-input mb-4" placeholder="パスワードを入力"
+             onkeydown="if(event.key==='Enter')doLogin()">
+
+      <button class="btn-red w-full" onclick="doLogin()">ログイン</button>
+
+      <p id="login-error" class="hidden text-red-600 text-sm text-center mt-3 font-medium">
+        パスワードが違います
+      </p>
+      <p id="login-locked" class="hidden text-red-700 text-sm text-center mt-3 font-bold bg-red-50 p-3 rounded-xl">
+        🔒 3回失敗したためロックされました。<br>ページを再読み込みしてください。
+      </p>
+
+      <button onclick="resetSetup()" class="mt-6 text-xs text-gray-400 hover:text-gray-600 w-full text-center block">
+        別のデバイスから設定し直す
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 3: 管理画面（投稿エディタ）
+══════════════════════════════════════════════ -->
+<div id="screen-admin" class="screen flex-col min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="bg-gray-900 text-white px-4 py-4 shadow-lg flex-shrink-0">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-red-600 rounded-full flex items-center justify-center font-black text-sm">IY</div>
+        <div>
+          <div class="font-black text-lg leading-none">井口ヤング</div>
+          <div class="text-gray-400 text-xs">記事投稿システム</div>
+        </div>
+      </div>
+      <div class="flex gap-3 items-center">
+        <a href="blog.html" target="_blank" class="text-gray-300 hover:text-white text-sm border border-gray-600 px-3 py-1.5 rounded-lg">サイトを確認</a>
+        <button onclick="doLogout()" class="text-gray-400 hover:text-white text-sm">ログアウト</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- メイン -->
+  <div class="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
+
+    <!-- 投稿ステップ案内 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm mb-6 border border-gray-100">
+      <div class="grid sm:grid-cols-4 gap-3 text-center text-sm">
+        <div class="flex items-center gap-2 justify-center sm:justify-start">
+          <div class="w-6 h-6 rounded-full bg-red-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">1</div>
+          <span class="text-gray-700 font-medium">フォームに入力</span>
+        </div>
+        <div class="flex items-center gap-2 justify-center sm:justify-start">
+          <div class="w-6 h-6 rounded-full bg-red-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">2</div>
+          <span class="text-gray-700 font-medium">プレビューで確認</span>
+        </div>
+        <div class="flex items-center gap-2 justify-center sm:justify-start">
+          <div class="w-6 h-6 rounded-full bg-red-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">3</div>
+          <span class="text-gray-700 font-medium">「GitHubに投稿」を押す</span>
+        </div>
+        <div class="flex items-center gap-2 justify-center sm:justify-start">
+          <div class="w-6 h-6 rounded-full bg-green-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">✓</div>
+          <span class="text-gray-700 font-medium">約1分でサイトに反映</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6">
+
+      <!-- ══ 左カラム：入力フォーム ══ -->
+      <div class="space-y-5">
+
+        <!-- タイトル -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <label class="block text-sm font-bold text-gray-900 mb-2">📝 タイトル <span class="text-red-600">必須</span></label>
+          <input type="text" id="f-title" class="f-input" placeholder="例：春季大会 準決勝進出！">
+        </div>
+
+        <!-- 日付 + カテゴリ -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
+          <div>
+            <label class="block text-sm font-bold text-gray-900 mb-2">📅 日付 <span class="text-red-600">必須</span></label>
+            <input type="date" id="f-date" class="f-input">
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-gray-900 mb-2">🏷️ カテゴリ <span class="text-red-600">必須</span></label>
+            <div class="flex flex-wrap gap-2" id="cat-btns">
+              <button class="cat-btn active font-bold text-sm px-4 py-2 rounded-full border-2 border-red-600 text-red-600" data-cat="試合結果">⚾ 試合結果</button>
+              <button class="cat-btn font-bold text-sm px-4 py-2 rounded-full border-2 border-gray-200 text-gray-600" data-cat="練習風景">🏃 練習風景</button>
+              <button class="cat-btn font-bold text-sm px-4 py-2 rounded-full border-2 border-gray-200 text-gray-600" data-cat="イベント">🎉 イベント</button>
+              <button class="cat-btn font-bold text-sm px-4 py-2 rounded-full border-2 border-gray-200 text-gray-600" data-cat="お知らせ">📢 お知らせ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 概要 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <label class="block text-sm font-bold text-gray-900 mb-2">📄 概要（一覧に表示） <span class="text-red-600">必須</span></label>
+          <textarea id="f-excerpt" class="f-input" rows="2" style="min-height:70px" placeholder="例：先週末の試合で見事勝利！4強入りしました。（50文字程度）"></textarea>
+        </div>
+
+        <!-- 画像 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <label class="block text-sm font-bold text-gray-900 mb-2">🖼️ 画像ファイル名</label>
+          <input type="text" id="f-img" class="f-input" placeholder="例：blog4.jpg（images/ フォルダに入れた写真のファイル名）">
+          <p class="text-xs text-gray-400 mt-1.5">images/ フォルダにアップした写真のファイル名を入力。空欄=デフォルト画像。</p>
+        </div>
+
+        <!-- 本文 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <label class="block text-sm font-bold text-gray-900 mb-2">✏️ 本文 <span class="text-red-600">必須</span></label>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button onclick="insertTag('【見出し】','','小見出し')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-medium">＋ 見出し</button>
+            <button onclick="insertTag('【結果】','','井口ヤング 5 - 3 相手チーム')" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded-lg font-medium">＋ 試合結果</button>
+            <button onclick="insertTag('【次回予告】','','6月15日（日）準決勝')" class="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1.5 rounded-lg font-medium">＋ 次回予告</button>
+            <button onclick="insertTag('【紹介】','','名前（学年）')" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-medium">＋ 紹介</button>
+            <button onclick="insertTag('【スコア表】\nチーム名|1|2|3|4|5|6|7|計\n井口ヤング| | | | | | | |0\n相手チーム| | | | | | | |0\n','','')" class="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg font-medium">＋ スコア表</button>
+          </div>
+          <textarea id="f-body" class="f-input" placeholder="本文をここに書いてください。&#10;空行で段落を分けます。&#10;&#10;【見出し】小見出し&#10;ここに内容を書きます。&#10;&#10;【結果】井口ヤング 5 - 3 相手チーム&#10;&#10;【次回予告】6月15日（日）準決勝。応援よろしくお願いします！"></textarea>
+          <div class="mt-3 bg-gray-50 rounded-xl p-3 text-xs text-gray-500 leading-relaxed">
+            <strong class="text-gray-700">使えるタグ：</strong>
+            <code class="bg-white px-1 rounded">【見出し】</code>
+            <code class="bg-white px-1 rounded">【結果】</code>
+            <code class="bg-white px-1 rounded">【次回予告】</code>
+            <code class="bg-white px-1 rounded">【紹介】</code>
+            <code class="bg-white px-1 rounded">【ヒーロー】</code>
+          </div>
+        </div>
+
+        <!-- 投稿ボタン -->
+        <button id="publish-btn" class="btn-red w-full text-lg py-4" onclick="publishToGitHub()">
+          🚀 GitHubに投稿する
+        </button>
+        <p class="text-xs text-gray-400 text-center">投稿後、約1〜2分でサイトに反映されます</p>
+
+      </div>
+
+      <!-- ══ 右カラム：プレビュー ＋ 記事一覧 ══ -->
+      <div class="space-y-5">
+
+        <!-- タブ -->
+        <div class="flex border-b border-gray-200 bg-white rounded-t-2xl px-4 pt-4 gap-4">
+          <button class="tab-btn active pb-3 text-sm" id="tab-preview" onclick="showTab('preview')">👁️ プレビュー</button>
+          <button class="tab-btn pb-3 text-sm text-gray-500" id="tab-list" onclick="showTab('list')">📚 既存の記事</button>
+        </div>
+
+        <!-- Preview -->
+        <div id="panel-preview" class="bg-white rounded-b-2xl shadow-sm border border-t-0 border-gray-100 p-6 min-h-64">
+          <div class="flex items-center gap-2 mb-3">
+            <span id="prev-badge" class="text-xs font-bold px-3 py-1 rounded-full badge-game">試合結果</span>
+            <span id="prev-date" class="text-gray-400 text-xs"></span>
+          </div>
+          <h2 id="prev-title" class="font-black text-gray-900 text-lg leading-snug mb-3">ここにタイトルが表示されます</h2>
+          <div id="prev-img-wrap" class="rounded-xl overflow-hidden mb-4 bg-gray-100 flex items-center justify-center text-gray-300 text-sm" style="aspect-ratio:4/3">📷 画像</div>
+          <div class="preview-body text-sm" id="prev-body">
+            <p class="text-gray-400">本文を入力するとここにプレビューが表示されます。</p>
+          </div>
+        </div>
+
+        <!-- Article list -->
+        <div id="panel-list" class="hidden bg-white rounded-b-2xl shadow-sm border border-t-0 border-gray-100 overflow-hidden">
+          <div class="divide-y divide-gray-50 max-h-96 overflow-y-auto" id="existing-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     JavaScript
+══════════════════════════════════════════════ -->
+<script>
+// ────────────────────────────────────
+// 設定（リポジトリ情報）
+// ────────────────────────────────────
+const REPO_OWNER = 'tkm-glitch';
+const REPO_NAME  = 'iguchi-young2';
+const FILE_PATH  = 'news-list.js';
+const MAX_FAILS  = 3;
+
+// ────────────────────────────────────
+// SHA-256 ハッシュ（Web Crypto API）
+// ────────────────────────────────────
+async function sha256(msg) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ────────────────────────────────────
+// スクリーン管理
+// ────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ────────────────────────────────────
+// 起動時：状態によって画面を選択
+// ────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const hasSetup = localStorage.getItem('iy_pw_hash');
+  if (!hasSetup) {
+    showScreen('screen-setup');
+  } else if (sessionStorage.getItem('iy_session') === '1') {
+    // タブを閉じるまでログイン維持
+    showScreen('screen-admin');
+  } else {
+    showScreen('screen-login');
+  }
+  // 管理画面の初期化
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  buildExistingList();
+  updatePreview();
+});
+
+// ────────────────────────────────────
+// セットアップ
+// ────────────────────────────────────
+async function doSetup() {
+  const pw    = document.getElementById('setup-pw').value.trim();
+  const token = document.getElementById('setup-token').value.trim();
+  if (pw.length < 4)          { showToast('パスワードは4文字以上で設定してください', 'error'); return; }
+  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+    showToast('GitHub Token を正しく入力してください（ghp_ または github_pat_ で始まる）', 'error'); return;
+  }
+  const hash = await sha256(pw);
+  localStorage.setItem('iy_pw_hash',  hash);
+  localStorage.setItem('iy_gh_token', btoa(unescape(encodeURIComponent(token))));
+  localStorage.removeItem('iy_fail_count');
+  showToast('セットアップ完了！ログインしてください', 'success');
+  setTimeout(() => showScreen('screen-login'), 1200);
+}
+
+// ────────────────────────────────────
+// ログイン
+// ────────────────────────────────────
+async function doLogin() {
+  const failCount = parseInt(localStorage.getItem('iy_fail_count') || '0');
+  if (failCount >= MAX_FAILS) {
+    document.getElementById('login-locked').classList.remove('hidden');
+    document.getElementById('login-error').classList.add('hidden');
+    return;
+  }
+  const pw   = document.getElementById('login-pw').value;
+  const hash = await sha256(pw);
+  const stored = localStorage.getItem('iy_pw_hash');
+  if (hash === stored) {
+    localStorage.removeItem('iy_fail_count');
+    document.getElementById('login-error').classList.add('hidden');
+    sessionStorage.setItem('iy_session', '1');  // セッション開始
+    showScreen('screen-admin');
+  } else {
+    const next = failCount + 1;
+    localStorage.setItem('iy_fail_count', next);
+    const box = document.getElementById('login-pw').parentElement;
+    box.classList.add('shake');
+    setTimeout(() => box.classList.remove('shake'), 400);
+    if (next >= MAX_FAILS) {
+      document.getElementById('login-locked').classList.remove('hidden');
+      document.getElementById('login-error').classList.add('hidden');
+    } else {
+      document.getElementById('login-error').textContent =
+        `パスワードが違います（残り${MAX_FAILS - next}回）`;
+      document.getElementById('login-error').classList.remove('hidden');
+    }
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('iy_session');  // セッション終了
+  showScreen('screen-login');
+  document.getElementById('login-pw').value = '';
+}
+
+function resetSetup() {
+  if (!confirm('セットアップ情報をリセットします。よろしいですか？')) return;
+  localStorage.removeItem('iy_pw_hash');
+  localStorage.removeItem('iy_gh_token');
+  localStorage.removeItem('iy_fail_count');
+  showScreen('screen-setup');
+}
+
+// ────────────────────────────────────
+// GitHub API で news-list.js を更新
+// ────────────────────────────────────
+async function publishToGitHub() {
+  // バリデーション
+  const title   = document.getElementById('f-title').value.trim();
+  const dateVal = document.getElementById('f-date').value;
+  const excerpt = document.getElementById('f-excerpt').value.trim();
+  const body    = document.getElementById('f-body').value.trim();
+  if (!title)   { showToast('タイトルを入力してください', 'error'); return; }
+  if (!dateVal) { showToast('日付を入力してください', 'error'); return; }
+  if (!excerpt) { showToast('概要を入力してください', 'error'); return; }
+  if (!body)    { showToast('本文を入力してください', 'error'); return; }
+
+  const btn = document.getElementById('publish-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 投稿中...';
+
+  try {
+    const token = decodeURIComponent(escape(atob(localStorage.getItem('iy_gh_token') || '')));
+    if (!token) throw new Error('GitHub Token が設定されていません。再ログインしてください。');
+
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+    const headers = {
+      'Authorization': `token ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+    };
+
+    // ① 現在のファイルを取得
+    const getRes = await fetch(apiUrl, { headers });
+    if (!getRes.ok) {
+      const err = await getRes.json();
+      throw new Error(`ファイル取得失敗: ${err.message}`);
+    }
+    const getJson   = await getRes.json();
+    const currentB64 = getJson.content.replace(/\n/g,'');
+    const currentText = decodeURIComponent(escape(atob(currentB64)));
+    const sha = getJson.sha;
+
+    // ② 新記事エントリを生成
+    const [y,m,d] = dateVal.split('-');
+    const dispDate = `${y}年${parseInt(m)}月${parseInt(d)}日`;
+    const img      = document.getElementById('f-img').value.trim();
+
+    const newEntry =
+`  {
+    id:      "${dateVal}",
+    date:    "${dispDate}",
+    cat:     "${selectedCat}",
+    title:   "${title.replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/`/g,'\\`')}",
+    excerpt: "${excerpt.replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/`/g,'\\`')}",
+    img:     "${img}",
+    body: \`
+${body}
+    \`,
+  },`;
+
+    // ③ 挿入マーカーの後ろに追記
+    const MARKER = '/* ▼▼▼ ここに貼り付け↓ ▼▼▼ */';
+    if (!currentText.includes(MARKER)) {
+      throw new Error('news-list.js の挿入マーカーが見つかりません。ファイルを確認してください。');
+    }
+    const newText = currentText.replace(MARKER, `${MARKER}\n\n${newEntry}`);
+
+    // ④ ファイルを更新（PUT）
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        message: `📰 記事追加: ${title}`,
+        content: btoa(unescape(encodeURIComponent(newText))),
+        sha,
+      }),
+    });
+    if (!putRes.ok) {
+      const err = await putRes.json();
+      throw new Error(`投稿失敗: ${err.message}`);
+    }
+
+    showToast('✅ 投稿完了！約1〜2分でサイトに反映されます', 'success');
+    clearForm();
+
+  } catch (e) {
+    console.error(e);
+    showToast(`❌ ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 GitHubに投稿する';
+  }
+}
+
+function clearForm() {
+  document.getElementById('f-title').value   = '';
+  document.getElementById('f-excerpt').value = '';
+  document.getElementById('f-img').value     = '';
+  document.getElementById('f-body').value    = '';
+  document.getElementById('f-date').value    = new Date().toISOString().split('T')[0];
+  updatePreview();
+}
+
+// ────────────────────────────────────
+// カテゴリ・タグ・プレビュー
+// ────────────────────────────────────
+let selectedCat = '試合結果';
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('cat-btns').addEventListener('click', e => {
+    const btn = e.target.closest('[data-cat]');
+    if (!btn) return;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCat = btn.dataset.cat;
+    // 試合結果を選んだとき本文が空なら自動テンプレート
+    if (selectedCat === '試合結果') {
+      const bodyField = document.getElementById('f-body');
+      if (!bodyField.value.trim()) insertGameTemplate();
+    }
+    updatePreview();
+  });
+  ['f-title','f-date','f-excerpt','f-img','f-body'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePreview);
+  });
+});
+
+function insertGameTemplate() {
+  const d = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  const dateStr = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日（' + days[d.getDay()] + '）';
+  document.getElementById('f-title').value = 'vs ';
+  document.getElementById('f-body').value =
+`【日時】${dateStr}
+【場所】井口小グラウンド
+【対戦相手】
+【結果】○勝ち / ×負け　スコア　-　
+【バッテリー】投手名ー捕手名（イニング）
+
+【スコア表】
+チーム名|1|2|3|4|5|6|7|計
+井口ヤング| | | | | | | |0
+相手チーム| | | | | | | |0
+
+【見出し】試合の流れ
+試合の内容を書いてください。
+
+【見出し】今日のヒーロー
+活躍した選手を紹介してください（例：○○くん・3年生）。
+
+【次回予告】次の練習・試合日程`;
+  updatePreview();
+}
+
+function insertTag(before, after, placeholder) {
+  const ta = document.getElementById('f-body');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.substring(s,e) || placeholder;
+  const ins = '\n' + before + sel + after + '\n';
+  ta.value = ta.value.substring(0,s) + ins + ta.value.substring(e);
+  ta.focus(); ta.selectionStart = ta.selectionEnd = s + ins.length;
+  updatePreview();
+}
+
+function renderBody(raw) {
+  if (!raw) return '<p class="text-gray-400">本文を入力してください</p>';
+  let html = '', buf = '';
+  const flush = () => { const t=buf.trim(); if(t){html+=`<p>${t.replace(/\n/g,'<br>')}</p>`;}; buf=''; };
+  raw.trim().split('\n').forEach(line => {
+    const t = line.trim();
+    if (t.startsWith('【見出し】'))   { flush(); html+=`<h2>${t.replace('【見出し】','')}</h2>`; return; }
+    if (t.startsWith('【結果】'))     { flush(); html+=`<div class="box-red"><strong>試合結果：</strong>${t.replace('【結果】','')}</div>`; return; }
+    if (t.startsWith('【次回予告】')) { flush(); html+=`<div class="box-green">📅 <strong>次回の活動：</strong>${t.replace('【次回予告】','')}</div>`; return; }
+    if (t.startsWith('【紹介】'))     { flush(); html+=`<div class="box-blue">ℹ️ ${t.replace('【紹介】','')}</div>`; return; }
+    if (t.startsWith('【ヒーロー】')) { flush(); html+=`<div class="box-gold">🌟 <strong>今日のヒーロー：</strong>${t.replace('【ヒーロー】','')}</div>`; return; }
+    if (t === '') { flush(); return; }
+    buf += (buf?'\n':'') + t;
+  });
+  flush();
+  return html || '<p class="text-gray-400">本文を入力してください</p>';
+}
+
+function updatePreview() {
+  const title   = document.getElementById('f-title').value   || 'タイトル未入力';
+  const dateVal = document.getElementById('f-date').value;
+  const img     = document.getElementById('f-img').value;
+  const body    = document.getElementById('f-body').value;
+  const badgeMap = {'試合結果':'badge-game','練習風景':'badge-practice','イベント':'badge-event','お知らせ':'badge-notice'};
+  document.getElementById('prev-title').textContent = title;
+  document.getElementById('prev-badge').textContent = selectedCat;
+  document.getElementById('prev-badge').className   = `text-xs font-bold px-3 py-1 rounded-full ${badgeMap[selectedCat]||'badge-notice'}`;
+  if (dateVal) {
+    const [y,m,d] = dateVal.split('-');
+    document.getElementById('prev-date').textContent = `${y}年${parseInt(m)}月${parseInt(d)}日`;
+  }
+  const iw = document.getElementById('prev-img-wrap');
+  iw.innerHTML = img
+    ? `<img src="images/${img}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-gray-400\\'>画像: images/${img}</span>'">`
+    : '📷 画像';
+  document.getElementById('prev-body').innerHTML = renderBody(body);
+}
+
+// タブ切り替え
+function showTab(tab) {
+  document.getElementById('panel-preview').classList.toggle('hidden', tab !== 'preview');
+  document.getElementById('panel-list').classList.toggle('hidden', tab !== 'list');
+  document.getElementById('tab-preview').classList.toggle('active', tab === 'preview');
+  document.getElementById('tab-list').classList.toggle('active', tab === 'list');
+}
+
+// 既存記事一覧
+function buildExistingList() {
+  const badgeMap = {'試合結果':'badge-game','練習風景':'badge-practice','イベント':'badge-event','お知らせ':'badge-notice'};
+  document.getElementById('existing-list').innerHTML =
+    (typeof NEWS_LIST !== 'undefined' ? NEWS_LIST : []).map(n => `
+      <div class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+        <span class="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${badgeMap[n.cat]||'badge-notice'}">${n.cat}</span>
+        <span class="text-sm text-gray-700 flex-1 truncate">${n.title}</span>
+        <span class="text-xs text-gray-400 flex-shrink-0">${n.date}</span>
+      </div>`).join('');
+}
+
+// ────────────────────────────────────
+// トースト通知
+// ────────────────────────────────────
+let toastTimer;
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = type; }, 4000);
+}
+</script>
+
+</body>
+</html>

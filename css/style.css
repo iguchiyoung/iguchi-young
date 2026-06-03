@@ -1,0 +1,138 @@
+/* ────────────────────────────────────────────
+   井口ヤング 共通スタイル
+   Tailwind CDN と組み合わせて使用します
+   ──────────────────────────────────────────── */
+
+/* フォント */
+body { font-family: 'Noto Sans JP', sans-serif; color: #1c1c1c; overflow-x: hidden; }
+.bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; }
+
+/* ── フローティング LINE ── */
+#float-line {
+  position: fixed; bottom: 24px; right: 20px; z-index: 9999;
+  display: flex; align-items: center; gap: 10px;
+  background: #06C755; color: #fff;
+  padding: 14px 22px 14px 18px; border-radius: 50px;
+  font-weight: 700; font-size: 14px;
+  box-shadow: 0 6px 24px rgba(6,199,85,.55);
+  text-decoration: none;
+  animation: float-bob 3s ease-in-out infinite;
+  transition: transform .25s, box-shadow .25s;
+}
+#float-line:hover { transform: scale(1.06) translateY(-2px); box-shadow: 0 10px 32px rgba(6,199,85,.6); }
+#float-line svg  { flex-shrink: 0; }
+@keyframes float-bob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+@media (max-width: 640px) {
+  #float-line span { display: none; }
+  #float-line { padding: 16px; border-radius: 50%; }
+}
+
+/* ── ヒーロー背景 ── */
+.hero-bg {
+  background: linear-gradient(135deg, #6b0000 0%, #C8102E 55%, #E84060 100%);
+  position: relative; overflow: hidden;
+}
+
+/*
+ * ヒーロー背景写真の表示方法
+ * ---------------------------------------------------------
+ * hero-bg セクション内の最初の子要素として
+ *   <img src="images/XXX.jpg" alt="" class="hero-img" aria-hidden="true">
+ * を置くだけで背景写真が半透明で表示されます。
+ * CSS変数(var)を使わないので全ブラウザで確実に動作します。
+ */
+.hero-img {
+  position: absolute;
+  inset: 0;                  /* top:0; right:0; bottom:0; left:0 と同じ */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.2;              /* 薄く重ねる（0=透明, 1=不透明） */
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+/* ── ヒーロー下部の斜め切り抜き ── */
+.hero-diagonal {
+  position: absolute; bottom: -2px; left: 0; right: 0; height: 72px;
+  background: #f8f8f8;
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+}
+
+/* ── ストライプ装飾 ── */
+.stripe-deco {
+  background-image: repeating-linear-gradient(
+    -55deg, transparent, transparent 8px,
+    rgba(255,255,255,.06) 8px, rgba(255,255,255,.06) 16px
+  );
+}
+
+/* ── カードホバー ── */
+.card-lift { transition: transform .3s ease, box-shadow .3s ease; }
+.card-lift:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(200,16,46,.18); }
+
+/* ── 画像アスペクト比 ── */
+.aspect-card { aspect-ratio: 4/3; }
+.aspect-sq   { aspect-ratio: 1/1; }
+.img-cover   { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+
+/* ── Instagram グラデーション ── */
+.insta-grad {
+  background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+/* ── スクロール reveal ── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .65s ease, transform .65s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* ── モバイルメニュー ── */
+#mobile-menu { display: none; }
+#mobile-menu.open { display: block; }
+
+/* ── FAQ アコーディオン ── */
+.faq-item summary { cursor: pointer; list-style: none; user-select: none; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item[open] .faq-icon { transform: rotate(45deg); }
+.faq-icon { transition: transform .3s ease; flex-shrink: 0; }
+
+/* ── カテゴリバッジ ── */
+.badge-game     { background: #C8102E; color: #fff; }
+.badge-practice { background: #2563eb; color: #fff; }
+.badge-event    { background: #059669; color: #fff; }
+.badge-notice   { background: #7c3aed; color: #fff; }
+
+/* ── フォーム ── */
+.form-input {
+  width: 100%; border: 2px solid #e5e7eb; border-radius: 12px;
+  padding: 12px 16px; font-size: 15px; font-family: inherit;
+  transition: border-color .2s, box-shadow .2s; outline: none;
+  background: #fff;
+}
+.form-input:focus { border-color: #C8102E; box-shadow: 0 0 0 3px rgba(200,16,46,.12); }
+
+/* ══════════════════════════════════════════════
+   スコア表（試合結果）
+══════════════════════════════════════════════ */
+.score-table-wrap { overflow-x:auto; margin:1.2rem 0; -webkit-overflow-scrolling:touch; }
+.score-table { width:100%; border-collapse:collapse; min-width:380px; font-size:.9rem; }
+.score-table thead th {
+  background:#fef2f2; color:#C8102E; font-weight:900;
+  padding:9px 12px; border:1px solid #fecaca; text-align:center;
+}
+.score-table tbody td { padding:9px 12px; border:1px solid #e5e7eb; text-align:center; }
+.score-table tbody tr:nth-child(odd) td  { background:#fff; }
+.score-table tbody tr:nth-child(even) td { background:#f9fafb; }
+.score-table tbody td:first-child { text-align:left; font-weight:700; }
+.score-table tbody tr td:last-child { font-weight:900; color:#C8102E; }
+
+/* ── ヒーロー補助オーバーレイ（inline div 用） ── */
+.hero-dark-overlay {
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.10) 0%,
+    rgba(0,0,0,0.52) 100%
+  );
+}
