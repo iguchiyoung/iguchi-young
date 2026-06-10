@@ -53,7 +53,7 @@
   <div class="relative z-10 text-center text-white px-4 py-20 sm:py-24 reveal" style="position:relative;z-index:10;">
     <p class="text-gold bebas text-xl tracking-widest mb-2">About Us</p>
     <h1 class="bebas text-6xl sm:text-8xl mb-4" style="color:#C8102E;text-shadow:0 2px 20px rgba(0,0,0,.55),0 0 40px rgba(200,16,46,.3)">チーム紹介</h1>
-    <p class="text-white/90 text-lg">楽しく・礼儀正しく・仲間を大切に</p>
+    <p class="text-white/90 text-lg">仲間と明るく・楽しく・のびのび野球！</p>
   </div>
 </section>
 
@@ -66,7 +66,7 @@
         <h2 class="bebas text-4xl sm:text-5xl mb-6 leading-tight">三鷹市で活動する<br>地域密着チーム</h2>
         <p class="text-gray-700 leading-relaxed mb-4 text-sm sm:text-base">
           井口ヤングは東京都三鷹市を拠点に活動する少年野球チームです。
-          <strong>「楽しく・礼儀正しく・仲間を大切に」</strong>という理念のもと、
+          <strong>「仲間と明るく・楽しく・のびのび野球！」</strong>という理念のもと、
           小学1年生から6年生まで男女問わず活動しています。
         </p>
         <p class="text-gray-700 leading-relaxed text-sm sm:text-base mb-4">
@@ -116,7 +116,7 @@
       <h2 class="bebas text-4xl sm:text-5xl">指導者紹介</h2>
     </div>
     <div class="grid sm:grid-cols-3 gap-6 reveal" id="coaches-grid"></div>
-    <p class="text-center text-gray-500 text-sm mt-8 reveal">指導者はOBや父兄が中心。明るく楽しく、時には厳しく、愛情をもって指導します。</p>
+    <p class="text-center text-gray-500 text-sm mt-8 reveal">指導者は卒業OBと子供を持つ保護者で構成されています。みんなが「のびのびと野球を楽しめる」環境づくりを大切にしながら、サポートしています。</p>
   </div>
 </section>
 
@@ -187,13 +187,9 @@
     </div>`).join('');
 
   document.getElementById('coaches-grid').innerHTML = C.images.coaches.map(c => `
-    <div class="bg-white rounded-2xl overflow-hidden shadow-sm card-lift border border-gray-100 text-center">
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm card-lift border border-gray-100">
       <div class="aspect-sq overflow-hidden bg-red-50">
-        <img src="${c.img}" alt="${c.name}" class="img-cover" data-fallback="#fef2f2">
-      </div>
-      <div class="p-5">
-        <div class="text-xs font-bold text-red-team uppercase tracking-wider mb-1">${c.role}</div>
-        <h3 class="font-black text-gray-900 text-lg">${c.name}</h3>
+        <img src="${c.img}" alt="指導者" class="img-cover" data-fallback="#fef2f2">
       </div>
     </div>`).join('');
 
