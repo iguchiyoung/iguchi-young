@@ -149,8 +149,8 @@
         html += `<div class="box-result"><strong>試合結果</strong><br>${t.replace('【結果】','')}</div>\n`;
         return;
       }
-      // 【新入部員紹介】【紹介】
-      if (t.startsWith('【新入部員紹介】') || t.startsWith('【紹介】')) {
+      // 【新入団員紹介】【紹介】
+      if (t.startsWith('【新入団員紹介】') || t.startsWith('【紹介】')) {
         flush();
         html += `<div class="box-info"><strong>${t.replace(/【.*?】/,'').trim()||'紹介'}</strong><br>`;
         return;
@@ -236,7 +236,7 @@
       <!-- Nav -->
       <div class="mt-8 pt-8 border-t border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
         <a href="blog.html" class="text-red-team font-bold text-sm hover:underline">← 活動報告一覧に戻る</a>
-        <a href="#" class="js-line inline-flex items-center gap-2 bg-line-green text-white font-bold text-sm px-6 py-2.5 rounded-xl">💬 体験入部を相談する</a>
+        <a href="#" class="js-line inline-flex items-center gap-2 bg-line-green text-white font-bold text-sm px-6 py-2.5 rounded-xl">💬 体験会を相談する</a>
       </div>`;
 
     // SNS URL を再適用（動的に追加されたリンク用）

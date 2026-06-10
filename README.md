@@ -23,7 +23,7 @@ iguchi-young/
 ├── team.html          ← チーム紹介
 ├── blog.html          ← 活動報告 一覧
 ├── post.html          ← 活動報告 記事表示（1枚で全記事を表示）
-├── recruit.html       ← 部員募集・体験入部（カレンダーあり）
+├── recruit.html       ← 部員募集・体験会（カレンダーあり）
 ├── contact.html       ← お問い合わせ（Googleフォーム）
 ├── admin-ig2025.html  ★ 記事投稿ツール（ここから投稿する）
 │
